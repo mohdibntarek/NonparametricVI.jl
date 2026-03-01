@@ -207,6 +207,9 @@ function infer!(
     end
 
     for i in 1:iters
+        if verbose
+            @info "Iteration $i"
+        end
         update_particles!(ρ, pc, ctx.inference.dynamics, ad_backend)
         for (metric_name, metric_type) in track
             metric_value = compute_metric(metric_type, pc, ρ; ad_backend=ad_backend)
