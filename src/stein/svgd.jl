@@ -120,7 +120,6 @@ function particle_velocity(pc::ParticleContainer,
     return sum(minibtach_∇)/batchsize
 end
 
-
 """
     update_particles!(ρ, pc::ParticleContainer, dynamics::SVGD)
 
@@ -137,9 +136,15 @@ function update_particles!(ρ, pc::ParticleContainer, dynamics::SVGD, ad_backend
     # kernel value and gradient
     k_∇k = kernel_and_gradient_fn(dynamics.K, ad_backend)
 
+    vels = zeros(size(pc.P))
     for i ∈ 1:N
-        pc.P[:, i] += dynamics.η * particle_velocity(pc, ρ, i, k_∇k, dynamics)
+        vels[:, i] = particle_velocity(pc, ρ, i, k_∇k, dynamics)
+        pc.P[:, i] += dynamics.η * @view(vels[:, i])
     end
+    vel_rms = sqrt(sum(vels.^2) / length(vels))
+    pos_rms = sqrt(sum(pc.P.^2) / length(pc.P))
+    println("    rms(velocity) = $vel_rms")
+    println("    rms(velocity) / rms(position) = $(vel_rms / pos_rms)")
     return nothing
 end
 
